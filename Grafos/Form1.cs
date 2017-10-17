@@ -43,12 +43,34 @@ namespace Grafos
 
         private void BtLimpar_Click(object sender, EventArgs e)
         {
-            LimparMatriz((DataGridView)sender);
+            LimparMatriz(dgvMatriz);
         }
 
         private void BtCreate_Click(object sender, EventArgs e)
         {
             CriarMatriz();
+        }
+
+        private void btMin_Click(object sender, EventArgs e)
+        {
+            PreencherMatriz(true);
+            
+            var windowCaminhoMinimo = new CaminhoMinimo(matriz, new Grafo(matriz));
+            windowCaminhoMinimo.ShowDialog();
+        }
+
+        private void btEuler_Click(object sender, EventArgs e)
+        {
+            PreencherMatriz(false);
+            CaminhoEuleriano(matriz);
+        }
+
+        private void MakeCellsSquare(DataGridView dgv)
+        {
+            foreach (DataGridViewColumn column in dgv.Columns)
+            {
+                column.Width = dgv.Rows[0].Height;
+            }
         }
 
         private void CriarMatriz()
@@ -68,11 +90,23 @@ namespace Grafos
             MakeCellsSquare(dgvMatriz);
         }
 
-        private void MakeCellsSquare(DataGridView dgv)
+        private void PreencherMatriz(bool nullIsInfinity)
         {
-            foreach (DataGridViewColumn column in dgv.Columns)
+            for (int i = 0; i < dgvMatriz.Rows.Count; i++)
             {
-                column.Width = dgv.Rows[0].Height;
+                for (int j = 0; j < dgvMatriz.Columns.Count; j++)
+                {
+                    var value = dgvMatriz.Rows[i].Cells[j].Value;
+
+                    if (value == null || value.ToString().ToLower() == "-")
+                    {
+                        matriz[i, j] = nullIsInfinity ? Double.PositiveInfinity : 0;
+                    }
+                    else
+                    {
+                        matriz[i, j] = Math.Truncate(Double.Parse(value.ToString()));
+                    }
+                }
             }
         }
 
@@ -82,27 +116,28 @@ namespace Grafos
             dgv.Columns.Clear();
         }
 
-        private void btMin_Click(object sender, EventArgs e)
+        private void CaminhoEuleriano(double[,] matriz)
         {
-            for (int i = 0; i < dgvMatriz.Rows.Count; i++)
-            {
-                for (int j = 0; j < dgvMatriz.Columns.Count; j++)
-                {
-                    var value = dgvMatriz.Rows[i].Cells[j].Value;
+            int total, grau;
+            int n = matriz.GetLength(0);
 
-                    if (value == null || value.ToString().ToLower() == "inf")
-                    {
-                        matriz[i, j] = Double.PositiveInfinity;
-                    }
-                    else
-                    {
-                        matriz[i, j] = Math.Truncate(Double.Parse(value.ToString()));
-                    }
-                }
+            total = 0;
+
+            for (int i = 0; total <= 2 && i < n; i++)
+            {
+                grau = 0;
+
+                for (int j = 0; j < n; j++)
+                    grau += Convert.ToInt32(matriz[i, j]);
+
+                if (grau % 2 != 0) 
+                    total++;
             }
-            
-            var windowCaminhoMinimo = new CaminhoMinimo(matriz, new Grafo(matriz));
-            windowCaminhoMinimo.ShowDialog();
+
+            if (total > 2)
+                MessageBox.Show("Não existe caminho euleriano.");
+            else
+                MessageBox.Show("Existe um caminho euleriano.");
         }
     }
 }
